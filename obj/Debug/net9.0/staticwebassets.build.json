@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "blY6cNmuDuO0UVPgmoQ6PCXzBE2bY1x8Gvg3RI6xdyk=",
+  "Source": "WPR-backend",
+  "BasePath": "_content/WPR-backend",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

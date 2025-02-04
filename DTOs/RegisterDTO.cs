@@ -1,0 +1,9 @@
+namespace WPR_backend.DTOs {
+    public class RegisterDTO {
+        public string Voornaam { get; set; }
+        public string Achternaam { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string Role { get; set; } = "Klant";
+    }
+}
