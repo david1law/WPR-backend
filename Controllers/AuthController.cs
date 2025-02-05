@@ -15,10 +15,12 @@ namespace WPR_backend.Controllers {
     public class AuthController : ControllerBase {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly ILookupNormalizer _normalizer;
         private readonly IConfiguration _configuration;
 
-        public AuthController(UserManager<User> userManager, IConfiguration configuration) {
+        public AuthController(UserManager<User> userManager, ILookupNormalizer normalizer, IConfiguration configuration) {
             _userManager = userManager;
+            _normalizer = normalizer; // ✅ Initialize normalizer
             _configuration = configuration;
         }
 
@@ -46,25 +48,36 @@ namespace WPR_backend.Controllers {
         }
 
         [HttpPost("registreren")]
-        public async Task<IActionResult> Register([FromBody] RegisterDTO model) {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+        public async Task<IActionResult> Register([FromBody] RegisterDTO model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            var user = new User {
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+                return BadRequest(new { message = "Deze e-mail is al in gebruik." });
+
+            var user = new User
+            {
                 UserName = model.Email,
                 Email = model.Email,
                 Voornaam = model.Voornaam,
-                Achternaam = model.Achternaam
+                Achternaam = model.Achternaam,
+                EmailConfirmed = true
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
-
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            // ✅ Automatically assign "Particulier" role to new users
+            // ✅ Normalize email and manually update it
+            user.NormalizedEmail = _userManager.NormalizeEmail(user.Email);
+            await _userManager.UpdateAsync(user); // ✅ Explicitly update user in the database
+
+            // ✅ Assign default role
             await _userManager.AddToRoleAsync(user, "Particulier");
 
-            return Ok(new { message = "User registered successfully with role Particulier" });
+            return Ok(new { message = "Gebruiker succesvol geregistreerd." });
         }
 
         // Allow OPTIONS requests for CORS preflight

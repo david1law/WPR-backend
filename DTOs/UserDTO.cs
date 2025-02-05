@@ -4,4 +4,5 @@ public class UserDTO
     public string Voornaam { get; set; }
     public string Achternaam { get; set; }
     public string Email { get; set; }
+    public List<string> Roles { get; set; }
 }

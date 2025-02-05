@@ -12,7 +12,7 @@ using WPR_backend.Data;
 namespace WPR_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250204194037_InitialCreate")]
+    [Migration("20250205005230_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
