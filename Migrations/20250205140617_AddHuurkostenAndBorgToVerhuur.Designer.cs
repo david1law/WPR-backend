@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WPR_backend.Data;
 
@@ -11,9 +12,11 @@ using WPR_backend.Data;
 namespace WPR_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250205140617_AddHuurkostenAndBorgToVerhuur")]
+    partial class AddHuurkostenAndBorgToVerhuur
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -203,9 +206,8 @@ namespace WPR_backend.Migrations
                     b.Property<decimal>("Borg")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("Einddatum")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("Einddatum")
+                        .HasColumnType("datetime2");
 
                     b.Property<decimal>("Huurkosten")
                         .HasColumnType("decimal(18,2)");
@@ -230,9 +232,8 @@ namespace WPR_backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Startdatum")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("Startdatum")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()

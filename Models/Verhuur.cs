@@ -1,10 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using WPR_backend.Models; // ✅ Ensure this is correct
+using WPR_backend.Models;
 
-public class Verhuur
-{
+public class Verhuur {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();  // ✅ Auto-generated unique ID
 
@@ -12,12 +11,12 @@ public class Verhuur
     [ForeignKey("Auto")]  // ✅ Foreign key to `Autos`
     public string Kenteken { get; set; }
     
-    public virtual Auto Auto { get; set; }  // ✅ Navigation Property
+    public virtual Auto? Auto { get; set; }  // ✅ Make Nullable
 
     [ForeignKey("User")]  // ✅ Foreign key to `AspNetUsers`
     public string UserId { get; set; }
 
-    public virtual User User { get; set; }  // ✅ Navigation Property
+    public virtual User? User { get; set; }  // ✅ Make Nullable
 
     public string Status { get; set; } // ✅ Status can now be NULL
 
@@ -25,10 +24,10 @@ public class Verhuur
     public string Rijbewijs { get; set; }
 
     [Required]
-    public DateTime Startdatum { get; set; }
+    public string Startdatum { get; set; }
 
     [Required]
-    public DateTime Einddatum { get; set; }
+    public string Einddatum { get; set; }
 
     [Required]
     public string Ophaallocatie { get; set; }
@@ -37,4 +36,12 @@ public class Verhuur
     public string Inleverlocatie { get; set; }
 
     public string Opmerkingen { get; set; }
+    
+    [Required]
+    [Column(TypeName = "decimal(18,2)")]
+    public double Huurkosten { get; set; } // ✅ New field for rental cost
+
+    [Required]
+    [Column(TypeName = "decimal(18,2)")]
+    public double Borg { get; set; } // ✅ New field for deposit
 }
