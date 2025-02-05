@@ -16,8 +16,7 @@ namespace WPR_backend.Controllers {
         }
 
         [HttpGet("autos")]
-        public async Task<ActionResult<IEnumerable<Auto>>> GetAllCars()
-        {
+        public async Task<ActionResult<IEnumerable<Auto>>> GetAllCars() {
             var autos = await _context.Autos.ToListAsync();
             return Ok(autos);
         }

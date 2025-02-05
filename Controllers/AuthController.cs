@@ -24,12 +24,6 @@ namespace WPR_backend.Controllers {
             _configuration = configuration;
         }
 
-        [HttpGet("test")]
-        public IActionResult TestController() {
-            Console.WriteLine("✅ AuthController is being hit!");
-            return Ok("AuthController is working");
-        }
-
         [Authorize(Roles = "Admin")]
         [HttpPost("create-user")]
         public async Task<IActionResult> CreateUser([FromBody] RegisterDTO model) {

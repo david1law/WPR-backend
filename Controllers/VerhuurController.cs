@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using WPR_backend.Data;
 using WPR_backend.Models;
 
-[Route("api")]
+[Route("api/verhuur")]
 [ApiController]
 public class VerhuurController : ControllerBase
 {
@@ -17,7 +17,7 @@ public class VerhuurController : ControllerBase
     }
 
     // POST: api/verhuur
-    [HttpPost("verhuur")]
+    [HttpPost("create")]
     [Authorize]
     public async Task<IActionResult> CreateVerhuur([FromBody] Verhuur verhuur) {
         if (verhuur == null) {
@@ -62,5 +62,23 @@ public class VerhuurController : ControllerBase
             return NotFound();
         }
         return Ok(verhuur);
+    }
+
+    [HttpGet("all")]
+    [Authorize(Roles = "Backoffice, Frontoffice")]
+    public async Task<IActionResult> GetAllVerhuur([FromQuery] bool backoffice = false) {
+        try {
+            IQueryable<Verhuur> query = _context.Verhuur
+                .Include(v => v.Auto)
+                .Include(v => v.User);
+                
+            if (backoffice) query = query.Where(v => v.Status == "aanvraag in afwachting");
+
+            var verhuurList = await query.ToListAsync();
+            return Ok(verhuurList);
+        }
+        catch (Exception ex) {
+            return StatusCode(500, $"Error retrieving verhuur records: {ex.Message}");
+        }
     }
 }
