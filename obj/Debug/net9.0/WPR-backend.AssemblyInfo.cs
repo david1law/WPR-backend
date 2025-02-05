@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WPR-backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+30e686c56dc1384c42864640ab076ec579f07e6c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6d4bc8ce60d3f1eb80a76f8bc1d5614d430a1faa")]
 [assembly: System.Reflection.AssemblyProductAttribute("WPR-backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WPR-backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
