@@ -1,12 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using WPR_backend.Models;
 using Microsoft.EntityFrameworkCore;
-
+using WPR_backend.Data;
 
 namespace WPR_backend.Controllers {
     [ApiController]
@@ -15,10 +12,12 @@ namespace WPR_backend.Controllers {
     public class AdminController : ControllerBase {
         private readonly UserManager<User> _userManager;
         private readonly ILookupNormalizer _normalizer;
+        private readonly ApplicationDbContext _context;
 
-        public AdminController(UserManager<User> userManager, ILookupNormalizer normalizer) {
+        public AdminController(UserManager<User> userManager, ILookupNormalizer normalizer, ApplicationDbContext context) {
             _userManager = userManager;
-            _normalizer = normalizer; // ✅ Initialize normalizer
+            _normalizer = normalizer;
+            _context = context;
         }
 
         // ✅ Get all users with their roles
@@ -50,12 +49,20 @@ namespace WPR_backend.Controllers {
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("users/{id}")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUser(string id) {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) {
-                return NotFound(new { message = "Gebruiker niet gevonden." }); // ✅ Return a clear message
+                return NotFound(new { message = "Gebruiker niet gevonden." });
             }
+
+            var verhuurRecords = await _context.Verhuur.Where(v => v.UserId == id).ToListAsync();
+            foreach (var verhuur in verhuurRecords) {
+                verhuur.DeletedUserEmail = user.Email;
+                verhuur.UserId = null;
+            }
+
+            await _context.SaveChangesAsync();
 
             var result = await _userManager.DeleteAsync(user);
             if (!result.Succeeded) {
@@ -96,8 +103,7 @@ namespace WPR_backend.Controllers {
             // ✅ Assign the selected role
             await _userManager.AddToRoleAsync(user, model.Role);
 
-            return Ok(new
-            {
+            return Ok(new {
                 message = "Gebruiker succesvol toegevoegd.",
                 user = new
                 {

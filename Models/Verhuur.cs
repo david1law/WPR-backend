@@ -14,7 +14,7 @@ public class Verhuur {
     public virtual Auto? Auto { get; set; }  // ✅ Make Nullable
 
     [ForeignKey("User")]  // ✅ Foreign key to `AspNetUsers`
-    public string UserId { get; set; }
+    public string? UserId { get; set; }
 
     public virtual User? User { get; set; }  // ✅ Make Nullable
 
@@ -44,4 +44,7 @@ public class Verhuur {
     [Required]
     [Column(TypeName = "decimal(18,2)")]
     public double Borg { get; set; } // ✅ New field for deposit
+    
+    [Column(TypeName = "nvarchar(255)")]
+    public string? DeletedUserEmail { get; set; }
 }
