@@ -20,7 +20,7 @@ namespace WPR_backend.Controllers {
 
         public AuthController(UserManager<User> userManager, ILookupNormalizer normalizer, IConfiguration configuration) {
             _userManager = userManager;
-            _normalizer = normalizer; // ✅ Initialize normalizer
+            _normalizer = normalizer;
             _configuration = configuration;
         }
 
@@ -33,26 +33,22 @@ namespace WPR_backend.Controllers {
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            // ✅ Assign role (must be "Frontoffice" or "Backoffice" since "Klant" is automatic)
+            // Rol toewijzen (moet "Frontoffice" of "Backoffice" zijn aangezien "Klant" automatisch is voor nieuwe gebruikers)
             if (model.Role != "Frontoffice" && model.Role != "Backoffice")
-                return BadRequest("Invalid role. Only Frontoffice or Backoffice users can be created by admin.");
+                return BadRequest("Rol ongeldig. Alleen Front- en Backoffice kan worden aangemaakt door Admin.");
 
             await _userManager.AddToRoleAsync(user, model.Role);
-            return Ok(new { message = $"User {model.Email} created successfully with role {model.Role}" });
+            return Ok(new { message = $"Gebruiker {model.Email} succesvol aangemaakt met rol {model.Role}" });
         }
 
         [HttpPost("registreren")]
-        public async Task<IActionResult> Register([FromBody] RegisterDTO model)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+        public async Task<IActionResult> Register([FromBody] RegisterDTO model) {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser != null)
-                return BadRequest(new { message = "Deze e-mail is al in gebruik." });
+            if (existingUser != null) return BadRequest(new { message = "Deze e-mail is al in gebruik." });
 
-            var user = new User
-            {
+            var user = new User {
                 UserName = model.Email,
                 Email = model.Email,
                 Voornaam = model.Voornaam,
@@ -61,20 +57,19 @@ namespace WPR_backend.Controllers {
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
+            if (!result.Succeeded) return BadRequest(result.Errors);
 
-            // ✅ Normalize email and manually update it
+            // Email handmatig normalizen
             user.NormalizedEmail = _userManager.NormalizeEmail(user.Email);
-            await _userManager.UpdateAsync(user); // ✅ Explicitly update user in the database
+            await _userManager.UpdateAsync(user); // User updaten in de database
 
-            // ✅ Assign default role
+            // Default rol toewijzen
             await _userManager.AddToRoleAsync(user, "Particulier");
 
             return Ok(new { message = "Gebruiker succesvol geregistreerd." });
         }
 
-        // Allow OPTIONS requests for CORS preflight
+        // Laat OPTIONS requests toe voor CORS preflight
         [HttpOptions]
         public IActionResult Preflight() {
             return Ok();
@@ -83,30 +78,30 @@ namespace WPR_backend.Controllers {
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO model) {
             if (model == null || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password)) {
-                Console.WriteLine("❌ Error: Email or password is empty.");
-                return BadRequest("Email and password are required.");
+                Console.WriteLine("Error: Email of wachtwoord is leeg.");
+                return BadRequest("Email en wachtwoord zijn vereist.");
             }
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password)) {
-                Console.WriteLine($"❌ Error: No user found with email '{model.Email}'.");
-                return Unauthorized("Invalid credentials");
+                Console.WriteLine($"Error: Geen gebruiker gevonden me email '{model.Email}'.");
+                return Unauthorized("Ongeldige inloggegevens");
             }
 
-            Console.WriteLine($"✅ Found user: {user.Email} (ID: {user.Id})");
+            Console.WriteLine($"Gebruiker gevonden: {user.Email} (ID: {user.Id})");
 
             bool isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
             if (!isPasswordValid) {
-                Console.WriteLine($"❌ Error: Incorrect password for {user.Email}");
-                return Unauthorized("Invalid credentials");
+                Console.WriteLine($"Error: Ongeldig wachtwoord voor {user.Email}");
+                return Unauthorized("Ongeldige inloggegevens");
             }
 
             var token = await GenerateJwtToken(user);
-            Console.WriteLine($"✅ Token generated successfully for {user.Email}");
-            // 🔍 Debugging: Decode and log the JWT payload
+            Console.WriteLine($"Token succesvol gegenereerd voor {user.Email}");
+            // Token debugging bij errors
             var handler = new JwtSecurityTokenHandler();
             var decodedToken = handler.ReadJwtToken(token);
-            Console.WriteLine($"🔹 Token Payload: {decodedToken}");
+            Console.WriteLine($"Token Payload: {decodedToken}");
             return Ok(new { token });
         }
 
@@ -115,18 +110,17 @@ namespace WPR_backend.Controllers {
             var secretKey = _configuration["JwtSettings:Secret"];
             
             if (string.IsNullOrEmpty(secretKey)) {
-                throw new Exception("❌ ERROR: JWT Secret Key is missing from appsettings.json!");
+                throw new Exception("Error: JWT Secret Key is missing from appsettings.json!");
             }
 
             var key = Encoding.UTF8.GetBytes(secretKey);
 
-            // ✅ Get user roles
             var roles = await _userManager.GetRolesAsync(user);
 
             if (roles.Count == 0) {
-                Console.WriteLine($"❌ User {user.Email} has no assigned roles!");
+                Console.WriteLine($"Gebruiker {user.Email} heeft geen rol toegewezen");
             } else {
-                Console.WriteLine($"✅ User {user.Email} has roles: {string.Join(", ", roles)}");
+                Console.WriteLine($"Gebruiker {user.Email} heeft rol: {string.Join(", ", roles)}");
             }
 
             var roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role)).ToList();
@@ -136,10 +130,9 @@ namespace WPR_backend.Controllers {
                 new(ClaimTypes.Email, user.Email)
             };
             
-            claims.AddRange(roleClaims); // ✅ Add role claims to token
+            claims.AddRange(roleClaims);
 
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
+            var tokenDescriptor = new SecurityTokenDescriptor {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

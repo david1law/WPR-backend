@@ -12,7 +12,7 @@ namespace WPR_backend.Data {
         protected override void OnModelCreating(ModelBuilder builder) {
             base.OnModelCreating(builder);
 
-            // ✅ Force Id to be string
+            // ID forceren om een string te zijn ipv int
             builder.Entity<User>()
                 .Property(u => u.Id)
                 .HasColumnType("nvarchar(450)")
@@ -21,13 +21,14 @@ namespace WPR_backend.Data {
                 builder.Entity<Auto>()
                 .HasKey(a => a.Kenteken);
 
-            // ✅ Define Foreign Key Relationship in `Verhuur`
+            // Foreign key naar Auto vanuit Verhuur aanduiden
             builder.Entity<Verhuur>()
                 .HasOne(v => v.Auto)
                 .WithMany()
                 .HasForeignKey(v => v.Kenteken)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Foreign key naar User vanuit Verhuur aanduiden
             builder.Entity<Verhuur>()
                 .HasOne(v => v.User)
                 .WithMany()

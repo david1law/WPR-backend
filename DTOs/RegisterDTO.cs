@@ -4,6 +4,6 @@ namespace WPR_backend.DTOs {
         public string Achternaam { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
-        public string Role { get; set; } = "Klant";
+        public string Role { get; set; }
     }
 }

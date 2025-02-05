@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 public class Auto {
     [Key]
-    public string Kenteken { get; set; }  // ✅ Primary Key
+    public string Kenteken { get; set; }
 
     [Required]
     public string Soort { get; set; }

@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WPR_backend.Data;
 using WPR_backend.Models;
-using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,9 +15,9 @@ builder.Configuration.SetBasePath(Directory.GetCurrentDirectory());
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 var secretKey = builder.Configuration["JwtSettings:Secret"];
-if (string.IsNullOrEmpty(secretKey)) throw new Exception("❌ ERROR: JWT Secret Key is missing from appsettings.json!");
+if (string.IsNullOrEmpty(secretKey)) throw new Exception("Error: JWT Secret Key is missing from appsettings.json!");
 
-// Add CORS Policy
+// CORS Policy toevoegen
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowReactApp",
         policy => policy.WithOrigins("http://localhost:3000")
@@ -28,16 +27,16 @@ builder.Services.AddCors(options => {
     );
 });
 
-// Configure Database
+// Database configureren
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure Identity with Custom User Model
+// Identity opzetten
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// Configure JWT Authentication
+// JWT Authenticatie configureren
 var key = Encoding.UTF8.GetBytes(secretKey);
 builder.Services.AddAuthentication(options => {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -59,7 +58,7 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Ensure Roles & Admin Account Exist on Startup
+// Roles en Admin account aanmaken bij startup
 using (var scope = app.Services.CreateScope()) {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
@@ -99,37 +98,37 @@ using (var scope = app.Services.CreateScope()) {
         }
     }
 
-    // ✅ Retrieve the Admin user again to ensure they exist
+    // Kijkt of de Admin account bestaat
     adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser == null) {
-        Console.WriteLine("❌ ERROR: Admin user could not be found after creation.");
+        Console.WriteLine("Error: Admin user niet gevonden na het aanmaken.");
         return;
     }
 
-    // ✅ Ensure the Admin Role exists before assigning
+    // Zorgt dat de rol Admin bestaat voor het toewijzen aan de gebruiker
     var adminRole = await roleManager.FindByNameAsync("Admin");
     if (adminRole == null) {
-        Console.WriteLine("❌ ERROR: Admin role does not exist. Creating it now...");
+        Console.WriteLine("Error: Admin rol bestaat niet. Aanmaken...");
         await roleManager.CreateAsync(new IdentityRole("Admin"));
     }
 
-    // ✅ Prevent Duplicate Role Assignment Before Adding
+    // Voorkomt het dubbel toewijzen van rollen
     var rolesForAdmin = await userManager.GetRolesAsync(adminUser);
     if (!rolesForAdmin.Contains("Admin")) {
-        Console.WriteLine($"🔍 Assigning 'Admin' role to {adminEmail}");
+        Console.WriteLine($"Admin rol toevoegen aan {adminEmail}");
         var roleAssignmentResult = await userManager.AddToRoleAsync(await userManager.FindByEmailAsync(adminEmail), "Admin");
 
         if (!roleAssignmentResult.Succeeded) {
-            Console.WriteLine($"❌ Error assigning role: {string.Join(", ", roleAssignmentResult.Errors.Select(e => e.Description))}");
+            Console.WriteLine($"Error bij rol toewijzen: {string.Join(", ", roleAssignmentResult.Errors.Select(e => e.Description))}");
         } else {
-            Console.WriteLine($"✅ Successfully assigned 'Admin' role to {adminEmail}");
+            Console.WriteLine($"Succesvol Admin rol toegewezen aan {adminEmail}");
         }
     } else {
-        Console.WriteLine($"✅ {adminEmail} already has 'Admin' role.");
+        Console.WriteLine($"{adminEmail} heeft al Admin rol.");
     }
 }
 
-app.UseCors("AllowReactApp");
+app.UseCors("AllowReactApp"); // Laat de app CORS gebruiken
 
 app.UseRouting();
 app.UseAuthentication();

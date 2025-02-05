@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using System;
 using System.Threading.Tasks;
 using WPR_backend.Data;
@@ -16,31 +17,30 @@ public class VerhuurController : ControllerBase
         _context = context;
     }
 
-    // POST: api/verhuur
     [HttpPost("create")]
     [Authorize]
     public async Task<IActionResult> CreateVerhuur([FromBody] Verhuur verhuur) {
         if (verhuur == null) {
-            return BadRequest("Invalid verhuur request.");
+            return BadRequest("Ongeldige verhuur aanvraag.");
         }
 
-        // Ensure that the provided auto (kenteken) exists in the database
+        // Controleren of de gekozen auto in de database bestaat
         var existingAuto = await _context.Autos.FindAsync(verhuur.Kenteken);
         if (existingAuto == null) {
-            return NotFound("Auto not found.");
+            return NotFound("Auto niet gevonden.");
         }
 
-        // Ensure that the provided user exists in the database
+        // Controleren of de gebruiker in de database bestaat
         var existingUser = await _context.Users.FindAsync(verhuur.UserId);
         if (existingUser == null) {
-            return NotFound("User not found.");
+            return NotFound("Gebruiker niet gevonden.");
         }
 
         try {
-            verhuur.Id = Guid.NewGuid();  // Ensure unique ID
+            verhuur.Id = Guid.NewGuid();  // Zorgt voor een unieke ID
             verhuur.Status = "aanvraag in afwachting";  // Default status
 
-            // Attach the foreign key references without requiring navigation properties
+            // Voegt foreign key references toe zonder de navigation properties nodig te hebben
             verhuur.Auto = null;
             verhuur.User = null;
 
@@ -49,24 +49,21 @@ public class VerhuurController : ControllerBase
 
             return CreatedAtAction(nameof(GetVerhuurById), new { id = verhuur.Id }, verhuur);
         } catch (Exception ex) {
-            return StatusCode(500, $"Error saving verhuur: {ex.Message}");
+            return StatusCode(500, $"Error bij het opslaan van het verhuur: {ex.Message}");
         }
     }
 
-    // GET: api/verhuur/{id}
     [HttpGet("{id}")]
     public async Task<IActionResult> GetVerhuurById(Guid id) {
         var verhuur = await _context.Verhuur.FindAsync(id);
-        if (verhuur == null) {
-            return NotFound();
-        }
+        if (verhuur == null) return NotFound();
         return Ok(verhuur);
     }
 
     [HttpGet("all")]
     [Authorize(Roles = "Backoffice, Frontoffice")]
     public async Task<IActionResult> GetAllVerhuur(
-        [FromQuery] bool afwachting = false,
+        [FromQuery] bool afwachting = false, // De filter parameters uit de URL bv. /verhuur?goedgekeurd=true
         [FromQuery] bool goedgekeurd = false,
         [FromQuery] bool afgekeurd = false,
         [FromQuery] bool verhuurd = false,
@@ -76,6 +73,7 @@ public class VerhuurController : ControllerBase
                 .Include(v => v.Auto)
                 .Include(v => v.User);
 
+            // Afhankelijk van waar de request vandaan komt, wordt de gepaste filter toegepast op het ophalen van de lijst met verhuur
             if (afwachting) query = query.Where(v => v.Status == "aanvraag in afwachting");
             if (goedgekeurd) query = query.Where(v => v.Status == "goedgekeurd");
             if (afgekeurd) query = query.Where(v => v.Status == "afgekeurd");
@@ -86,38 +84,34 @@ public class VerhuurController : ControllerBase
             return Ok(verhuurList);
         }
         catch (Exception ex) {
-            return StatusCode(500, $"Error retrieving verhuur records: {ex.Message}");
+            return StatusCode(500, $"Error bij het ophalen van verhuur: {ex.Message}");
         }
     }
 
     [HttpPut("update/{id}")]
     [Authorize(Roles = "Backoffice, Frontoffice")]
     public async Task<IActionResult> UpdateVerhuurStatus(Guid id, [FromBody] VerhuurStatusUpdateDto updateDto) {
-        if (updateDto == null) {
-            return BadRequest("Invalid request data.");
-        }
+        if (updateDto == null) return BadRequest("Ongeldige request data.");
 
-        // Find the Verhuur request by ID
+        // Find by ID voor het verhuur
         var verhuur = await _context.Verhuur.FindAsync(id);
         if (verhuur == null) {
-            return NotFound("Verhuur request not found.");
+            return NotFound("Verhuur aanvraag niet gevonden.");
         }
 
-        // ✅ Update only the status and opmerkingen
+        // Alleen de status en opmerkingen worden bijgewerkt
         verhuur.Status = updateDto.Status;
-        if (!string.IsNullOrEmpty(updateDto.Opmerkingen)) {
-            verhuur.Opmerkingen = updateDto.Opmerkingen;
-        }
+        if (!string.IsNullOrEmpty(updateDto.Opmerkingen)) verhuur.Opmerkingen = updateDto.Opmerkingen;
 
         try {
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Verhuur status updated successfully." });
+            return Ok(new { message = "Verhuur status succesvol bijgewerkt." });
         } catch (Exception ex) {
-            return StatusCode(500, $"Error updating verhuur: {ex.Message}");
+            return StatusCode(500, $"Error bij het updaten van verhuur: {ex.Message}");
         }
     }
 
-    // ✅ DTO to ensure only Status and Opmerkingen can be updated
+    // DTO om ervoor te zorgen dat de status en opmerkingen bijgewerkt kunnen worden
     public class VerhuurStatusUpdateDto {
         public string Status { get; set; }
         public string? Opmerkingen { get; set; }

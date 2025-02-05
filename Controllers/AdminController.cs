@@ -8,7 +8,7 @@ using WPR_backend.Data;
 namespace WPR_backend.Controllers {
     [ApiController]
     [Route("api/admin")]
-    [Authorize(Roles = "Admin")] // ✅ Only Admins can access
+    [Authorize(Roles = "Admin")] // Alleen de admin kan deze API endpoint in
     public class AdminController : ControllerBase {
         private readonly UserManager<User> _userManager;
         private readonly ILookupNormalizer _normalizer;
@@ -20,31 +20,30 @@ namespace WPR_backend.Controllers {
             _context = context;
         }
 
-        // ✅ Get all users with their roles
         [Authorize(Roles = "Admin")]
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers() {
-            Console.WriteLine("🔍 Fetching users...");
+            Console.WriteLine("Gebruikers ophalen...");
 
             var users = await _userManager.Users.ToListAsync();
-            Console.WriteLine($"✅ Retrieved {users.Count} users from the database.");
+            Console.WriteLine($"{users.Count} gebruikers in de database gevonden.");
 
             var userDTOs = new List<UserDTO>();
 
             foreach (var user in users) {
                 var roles = await _userManager.GetRolesAsync(user);
-                Console.WriteLine($"🔍 User: {user.Email}, Roles: {string.Join(", ", roles)}");
+                Console.WriteLine($"Gebruiker: {user.Email}, Rol: {string.Join(", ", roles)}");
 
                 userDTOs.Add(new UserDTO {
                     Id = user.Id,
                     Voornaam = user.Voornaam,
                     Achternaam = user.Achternaam,
                     Email = user.Email,
-                    Roles = roles.ToList()
+                    Roles = roles.ToList() // Rollen worden in een lijst opgeslagen, zelfs als het er maar 1 is
                 });
             }
 
-            Console.WriteLine("✅ Finished processing users.");
+            Console.WriteLine("Finished processing users.");
             return Ok(userDTOs);
         }
 
@@ -52,9 +51,7 @@ namespace WPR_backend.Controllers {
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUser(string id) {
             var user = await _userManager.FindByIdAsync(id);
-            if (user == null) {
-                return NotFound(new { message = "Gebruiker niet gevonden." });
-            }
+            if (user == null) return NotFound(new { message = "Gebruiker niet gevonden." });
 
             var verhuurRecords = await _context.Verhuur.Where(v => v.UserId == id).ToListAsync();
             foreach (var verhuur in verhuurRecords) {
@@ -65,26 +62,20 @@ namespace WPR_backend.Controllers {
             await _context.SaveChangesAsync();
 
             var result = await _userManager.DeleteAsync(user);
-            if (!result.Succeeded) {
-                return BadRequest(new { message = "Fout bij verwijderen van gebruiker." });
-            }
+            if (!result.Succeeded) return BadRequest(new { message = "Fout bij verwijderen van gebruiker." });
 
             return Ok(new { message = "Gebruiker succesvol verwijderd." });
         }
 
         [Authorize(Roles = "Admin")]
         [HttpPost("users")]
-        public async Task<IActionResult> CreateUser([FromBody] CreateUserDTO model)
-        {
-            if (model.Role != "Frontoffice" && model.Role != "Backoffice")
-                return BadRequest(new { message = "Ongeldige rol. Kies 'Frontoffice' of 'Backoffice'." });
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDTO model) {
+            if (model.Role != "Frontoffice" && model.Role != "Backoffice") return BadRequest(new { message = "Ongeldige rol. Kies 'Frontoffice' of 'Backoffice'." });
 
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser != null)
-                return BadRequest(new { message = "Deze e-mail is al in gebruik." });
+            if (existingUser != null) return BadRequest(new { message = "Deze e-mail is al in gebruik." });
 
-            var user = new User
-            {
+            var user = new User {
                 UserName = model.Email,
                 Email = model.Email,
                 Voornaam = model.Voornaam,
@@ -96,17 +87,16 @@ namespace WPR_backend.Controllers {
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            // ✅ Normalize email and manually update it
+            // Normalized email en update deze gelijk
             user.NormalizedEmail = _userManager.NormalizeEmail(user.Email);
-            await _userManager.UpdateAsync(user); // ✅ Explicitly update user in the database
+            await _userManager.UpdateAsync(user); // Update de gebruiker in de database
 
-            // ✅ Assign the selected role
+            // Wijst de gekozen rol toe aan de gebruiker
             await _userManager.AddToRoleAsync(user, model.Role);
 
             return Ok(new {
                 message = "Gebruiker succesvol toegevoegd.",
-                user = new
-                {
+                user = new {
                     user.Id,
                     user.Voornaam,
                     user.Achternaam,

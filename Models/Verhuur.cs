@@ -5,20 +5,20 @@ using WPR_backend.Models;
 
 public class Verhuur {
     [Key]
-    public Guid Id { get; set; } = Guid.NewGuid();  // ✅ Auto-generated unique ID
+    public Guid Id { get; set; } = Guid.NewGuid();  // Auto-generated unieke ID
 
     [Required]
-    [ForeignKey("Auto")]  // ✅ Foreign key to `Autos`
+    [ForeignKey("Auto")] // Foreign key naar Autos
     public string Kenteken { get; set; }
     
-    public virtual Auto? Auto { get; set; }  // ✅ Make Nullable
+    public virtual Auto? Auto { get; set; }  // Nullable
 
-    [ForeignKey("User")]  // ✅ Foreign key to `AspNetUsers`
+    [ForeignKey("User")]  // Foreign key naar AspNetUsers
     public string? UserId { get; set; }
 
-    public virtual User? User { get; set; }  // ✅ Make Nullable
+    public virtual User? User { get; set; }  // Nullable
 
-    public string Status { get; set; } // ✅ Status can now be NULL
+    public string Status { get; set; }
 
     [Required]
     public string Rijbewijs { get; set; }
@@ -39,12 +39,12 @@ public class Verhuur {
     
     [Required]
     [Column(TypeName = "decimal(18,2)")]
-    public double Huurkosten { get; set; } // ✅ New field for rental cost
+    public double Huurkosten { get; set; }
 
     [Required]
     [Column(TypeName = "decimal(18,2)")]
-    public double Borg { get; set; } // ✅ New field for deposit
+    public double Borg { get; set; }
     
     [Column(TypeName = "nvarchar(255)")]
-    public string? DeletedUserEmail { get; set; }
+    public string? DeletedUserEmail { get; set; } // Dit extra veld is nodig voor het bewaren van de verhuur informatie als de gebruiker wordt verwijderd
 }
