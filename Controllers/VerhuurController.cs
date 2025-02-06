@@ -81,9 +81,41 @@ public class VerhuurController : ControllerBase
             if (ingeleverd) query = query.Where(v => v.Status == "ingeleverd");
  
             var verhuurList = await query.ToListAsync();
-            return Ok(verhuurList);
+
+            var verhuurDTOs = verhuurList.Select(v => new {
+                v.Id,
+                v.Kenteken,
+                Auto = v.Auto != null ? new {
+                    v.Auto.Merk,
+                    v.Auto.Type,
+                    v.Auto.Huurkosten,
+                    v.Auto.Borg
+                } : null,
+                User = v.User != null ? new {
+                    v.User.Id,
+                    v.User.Voornaam,
+                    v.User.Achternaam,
+                    v.User.Email,
+                    Role = _context.UserRoles
+                        .Where(ur => ur.UserId == v.User.Id)
+                        .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name) // Join tables net zoals in SQL
+                        .FirstOrDefault() // Haalt de rol naam op
+                } : null,
+                v.Status,
+                v.Startdatum,
+                v.Einddatum,
+                v.Ophaallocatie,
+                v.Inleverlocatie,
+                v.Huurkosten,
+                v.Borg,
+                v.Rijbewijs,
+                v.Opmerkingen
+            }).ToList();
+
+            return Ok(verhuurDTOs);
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             return StatusCode(500, $"Error bij het ophalen van verhuur: {ex.Message}");
         }
     }
