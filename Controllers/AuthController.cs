@@ -14,13 +14,10 @@ namespace WPR_backend.Controllers {
     [ApiController]
     public class AuthController : ControllerBase {
         private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
-        private readonly ILookupNormalizer _normalizer;
         private readonly IConfiguration _configuration;
 
-        public AuthController(UserManager<User> userManager, ILookupNormalizer normalizer, IConfiguration configuration) {
+        public AuthController(UserManager<User> userManager, IConfiguration configuration) {
             _userManager = userManager;
-            _normalizer = normalizer;
             _configuration = configuration;
         }
 

@@ -11,12 +11,10 @@ namespace WPR_backend.Controllers {
     [Authorize(Roles = "Admin")] // Alleen de admin kan deze API endpoint in
     public class AdminController : ControllerBase {
         private readonly UserManager<User> _userManager;
-        private readonly ILookupNormalizer _normalizer;
         private readonly ApplicationDbContext _context;
 
-        public AdminController(UserManager<User> userManager, ILookupNormalizer normalizer, ApplicationDbContext context) {
+        public AdminController(UserManager<User> userManager, ApplicationDbContext context) {
             _userManager = userManager;
-            _normalizer = normalizer;
             _context = context;
         }
 
@@ -70,7 +68,9 @@ namespace WPR_backend.Controllers {
         [Authorize(Roles = "Admin")]
         [HttpPost("users")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDTO model) {
-            if (model.Role != "Frontoffice" && model.Role != "Backoffice") return BadRequest(new { message = "Ongeldige rol. Kies 'Frontoffice' of 'Backoffice'." });
+            if (model.Role != "Frontoffice" && model.Role != "Backoffice" && model.Role != "Wagenparkbeheerder") return BadRequest(new {
+                    message = "Ongeldige rol. Kies 'Frontoffice', 'Backoffice' of 'Wagenparkbeheerder'."
+                });
 
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null) return BadRequest(new { message = "Deze e-mail is al in gebruik." });

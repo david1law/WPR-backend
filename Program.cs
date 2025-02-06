@@ -65,7 +65,7 @@ using (var scope = app.Services.CreateScope()) {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var keyNormalizer = scope.ServiceProvider.GetRequiredService<ILookupNormalizer>();
 
-    string[] roles = { "Admin", "Particulier", "Zakelijk", "Frontoffice", "Backoffice" };
+    string[] roles = { "Admin", "Particulier", "Zakelijk", "Frontoffice", "Backoffice", "Wagenparkbeheerder" };
     foreach (var role in roles) {
         if (!await roleManager.RoleExistsAsync(role))
             await roleManager.CreateAsync(new IdentityRole(role));
