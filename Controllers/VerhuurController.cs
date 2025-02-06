@@ -109,7 +109,8 @@ public class VerhuurController : ControllerBase
                 v.Huurkosten,
                 v.Borg,
                 v.Rijbewijs,
-                v.Opmerkingen
+                v.Opmerkingen,
+                v.DeletedUserEmail
             }).ToList();
 
             return Ok(verhuurDTOs);
