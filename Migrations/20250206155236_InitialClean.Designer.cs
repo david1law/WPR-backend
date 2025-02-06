@@ -12,8 +12,8 @@ using WPR_backend.Data;
 namespace WPR_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250205140617_AddHuurkostenAndBorgToVerhuur")]
-    partial class AddHuurkostenAndBorgToVerhuur
+    [Migration("20250206155236_InitialClean")]
+    partial class InitialClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -206,8 +206,12 @@ namespace WPR_backend.Migrations
                     b.Property<decimal>("Borg")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("Einddatum")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("DeletedUserEmail")
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Einddatum")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Huurkosten")
                         .HasColumnType("decimal(18,2)");
@@ -232,15 +236,15 @@ namespace WPR_backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("Startdatum")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Startdatum")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
@@ -388,8 +392,7 @@ namespace WPR_backend.Migrations
                     b.HasOne("WPR_backend.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Auto");
 

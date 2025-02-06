@@ -64,6 +64,9 @@ using (var scope = app.Services.CreateScope()) {
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var keyNormalizer = scope.ServiceProvider.GetRequiredService<ILookupNormalizer>();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    context.Database.Migrate(); // Controleert of de db up to date is
+    DbInitializer.SeedAutos(context); // Roept de Autos seed op
 
     string[] roles = { "Admin", "Particulier", "Zakelijk", "Frontoffice", "Backoffice", "Wagenparkbeheerder" };
     foreach (var role in roles) {

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WPR_backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialClean : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -30,12 +30,12 @@ namespace WPR_backend.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Voornaam = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Achternaam = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Voornaam = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Achternaam = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -50,6 +50,25 @@ namespace WPR_backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Autos",
+                columns: table => new
+                {
+                    Kenteken = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Soort = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Merk = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Huurkosten = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Borg = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Aanschafjaar = table.Column<int>(type: "int", nullable: false),
+                    Kleur = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Transmissie = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Autos", x => x.Kenteken);
                 });
 
             migrationBuilder.CreateTable(
@@ -158,6 +177,40 @@ namespace WPR_backend.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Verhuur",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Kenteken = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Rijbewijs = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Startdatum = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Einddatum = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Ophaallocatie = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Inleverlocatie = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Opmerkingen = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Huurkosten = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Borg = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DeletedUserEmail = table.Column<string>(type: "nvarchar(255)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Verhuur", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Verhuur_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Verhuur_Autos_Kenteken",
+                        column: x => x.Kenteken,
+                        principalTable: "Autos",
+                        principalColumn: "Kenteken",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -196,6 +249,16 @@ namespace WPR_backend.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Verhuur_Kenteken",
+                table: "Verhuur",
+                column: "Kenteken");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Verhuur_UserId",
+                table: "Verhuur",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -217,10 +280,16 @@ namespace WPR_backend.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Verhuur");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Autos");
         }
     }
 }
